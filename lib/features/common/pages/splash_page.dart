@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pro_dine/core/constants/app_colors.dart';
 import 'package:pro_dine/core/constants/app_routes.dart';
+import 'package:pro_dine/features/common/pages/onboarding_page.dart';
 // AppLogo removed on splash — show text-only ProDine branding
 
 class SplashPage extends StatefulWidget {
@@ -25,6 +26,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late final Animation<Offset> _contentSlide;
 
   bool _showSplashContent = false;
+  bool _showGradient = false;
 
   @override
   void initState() {
@@ -69,6 +71,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     ).animate(_contentFade);
 
     _introController.forward();
+    // show gradient background shortly after intro starts for a smooth transition
+    Future.delayed(const Duration(milliseconds: 120), () {
+      if (mounted) setState(() => _showGradient = true);
+    });
     _initializeApp();
   }
 
@@ -86,7 +92,13 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     await Future.delayed(const Duration(milliseconds: 980));
 
     if (!mounted) return;
-    context.go(AppRoutes.login);
+
+    // Check if onboarding has been completed
+    final bool hasSeenOnboarding = await OnboardingService.isCompleted();
+    final String nextRoute =
+        hasSeenOnboarding ? AppRoutes.login : AppRoutes.onboarding;
+
+    context.go(nextRoute);
   }
 
   void _precacheAssets() {
@@ -131,83 +143,94 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
         statusBarBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxContentWidth),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: ScaleTransition(
-                      scale: _scaleAnimation,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'ProDine',
-                            style: TextStyle(
-                              color: AppColors.primaryRed,
-                              fontSize: logoHeight * 0.55,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.3,
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // animated professional gradient background
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _showGradient
+                      ? const [Color(0xFF0F1724), Color(0xFF065F46)]
+                      : [Colors.white, Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'ProDine',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _showGradient ? Colors.white : AppColors.primaryRed,
+                                fontSize: logoHeight * 0.6,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                              ),
                             ),
-                          ),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            switchInCurve: Curves.easeOutCubic,
-                            switchOutCurve: Curves.easeInCubic,
-                            child: !_showSplashContent
-                                ? const SizedBox(
-                                    height: 1,
-                                    key: ValueKey('empty'),
-                                  )
-                                : SlideTransition(
-                                    key: const ValueKey('content'),
-                                    position: _contentSlide,
-                                    child: FadeTransition(
-                                      opacity: _contentFade,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          SizedBox(
-                                            height: isCompactMobile ? 26 : 32,
+                            const SizedBox(height: 12),
+                            Text(
+                              'A smart cafeteria Application',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _showGradient ? Colors.white70 : const Color(0xFF344054),
+                                fontSize: isTabletOrDesktop ? 18 : 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              child: !_showSplashContent
+                                  ? const SizedBox(
+                                      height: 1,
+                                      key: ValueKey('empty'),
+                                    )
+                                  : SlideTransition(
+                                      key: const ValueKey('content'),
+                                      position: _contentSlide,
+                                      child: FadeTransition(
+                                        opacity: _contentFade,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            top: isCompactMobile ? 32 : 48,
                                           ),
-                                          Text(
-                                            'Smart Cafeteria Experience',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              color: const Color(0xFF344054),
-                                              fontSize:
-                                                  isTabletOrDesktop ? 16 : 14,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0,
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: isCompactMobile ? 14 : 18,
-                                          ),
-                                          _ThreeDotLoader(
+                                          child: _ThreeDotLoader(
                                             controller: _dotsController,
-                                            dotSize: isTabletOrDesktop ? 10 : 8,
-                                            spacing: isTabletOrDesktop ? 9 : 7,
+                                            dotSize: isTabletOrDesktop ? 24 : 20,
+                                            spacing: isTabletOrDesktop ? 16 : 14,
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -227,6 +250,13 @@ class _ThreeDotLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Define distinct colors for each dot
+    const List<Color> dotColors = [
+      Color(0xFF2563EB), // Blue
+      Color(0xFF059669), // Green
+      Color(0xFF06B6D4), // Cyan
+    ];
+
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
@@ -236,6 +266,7 @@ class _ThreeDotLoader extends StatelessWidget {
             final double progress = (controller.value + (index * 0.22)) % 1.0;
             final double opacity = _dotOpacity(progress);
             final double scale = _dotScale(progress);
+            final Color dotColor = dotColors[index];
 
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: spacing / 2),
@@ -246,9 +277,16 @@ class _ThreeDotLoader extends StatelessWidget {
                   child: Container(
                     width: dotSize,
                     height: dotSize,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryRed,
+                    decoration: BoxDecoration(
+                      color: dotColor,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: dotColor.withOpacity(0.4),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
                   ),
                 ),

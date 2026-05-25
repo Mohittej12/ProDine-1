@@ -6,6 +6,7 @@ class AppRoutes {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String verifyMobile = '/verify-mobile';
+  static const String onboarding = '/onboarding';
 
   // Employee
   static const String employeeModeSelection = '/employee/mode-selection';

@@ -15,6 +15,7 @@ import 'package:pro_dine/features/auth/pages/auth_forgot_password_page.dart';
 import 'package:pro_dine/features/auth/pages/auth_login_page.dart';
 import 'package:pro_dine/features/auth/pages/auth_register_page.dart';
 import 'package:pro_dine/features/auth/pages/auth_verify_mobile_page.dart';
+import 'package:pro_dine/features/common/pages/onboarding_page.dart';
 import 'package:pro_dine/features/common/pages/splash_page.dart';
 import 'package:pro_dine/features/common/pages/terms_and_disclaimer_page.dart';
 import 'package:pro_dine/features/employee/pages/employee_cart_page.dart';
@@ -90,6 +91,11 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.splash,
       pageBuilder: (context, state) =>
           _noTransitionPage(child: const SplashPage(), state: state),
+    ),
+    GoRoute(
+      path: AppRoutes.onboarding,
+      pageBuilder: (context, state) =>
+          _buildTransitionPage(child: const OnboardingPage(), state: state),
     ),
     GoRoute(
       path: AppRoutes.login,
