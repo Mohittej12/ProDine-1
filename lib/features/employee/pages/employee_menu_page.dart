@@ -267,8 +267,8 @@ class _EmployeeMenuFragmentState extends State<EmployeeMenuFragment>
             children: [
               CustomScrollView(
                 controller: _scrollController,
-                physics: const _LoopingScrollPhysics(
-                  parent: BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
                 ),
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
@@ -1778,33 +1778,26 @@ class _MenuGrid extends StatelessWidget {
         final columns = math.min(layout.gridColumns, items.length);
         final spacing = layout.gridSpacing;
         final totalSpacing = spacing * (columns - 1);
-        final itemWidth = (constraints.maxWidth - totalSpacing) / columns;
+        final availableWidth = constraints.maxWidth;
+        final itemWidth = (availableWidth - totalSpacing) / columns;
         final itemHeight = layout.itemHeight(itemWidth);
 
         return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 280),
           switchInCurve: Curves.easeOutCubic,
           switchOutCurve: Curves.easeInCubic,
-          child: Wrap(
-            key: ValueKey('${items.length}-${items.map((e) => e.name).join()}'),
-            spacing: spacing,
-            runSpacing: spacing,
-            children: items.map((item) {
-              return TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.96, end: 1),
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value.clamp(0.0, 1.0),
-                    child: Transform.scale(
-                      scale: value,
-                      alignment: Alignment.topCenter,
-                      child: child,
-                    ),
-                  );
-                },
-                child: SizedBox(
+          transitionBuilder: (child, animation) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          child: SizedBox(
+            width: availableWidth,
+            child: Wrap(
+              key: ValueKey('menu-${items.length}-${items.first.name}'),
+              spacing: spacing,
+              runSpacing: spacing,
+              alignment: WrapAlignment.start,
+              children: items.map((item) {
+                return SizedBox(
                   width: itemWidth,
                   height: itemHeight,
                   child: _MenuItemCard(
@@ -1813,9 +1806,9 @@ class _MenuGrid extends StatelessWidget {
                     itemWidth: itemWidth,
                     onAdd: (offset) => onAddToCart(item, offset),
                   ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
         );
       },

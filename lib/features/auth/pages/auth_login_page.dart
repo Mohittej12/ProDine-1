@@ -594,9 +594,9 @@ class _LoginCardState extends State<_LoginCard> {
               'ProDine',
               style: TextStyle(
                 color: AppColors.primaryRed,
-                fontSize: logoHeight * 0.9,
+                fontSize: logoHeight * 0.5,
                 fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
+                letterSpacing: -0.3,
               ),
             ),
             SizedBox(height: widget.veryCompactHeight ? 10 : 14),

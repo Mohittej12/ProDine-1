@@ -8,9 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 class OnboardingService {
   static const String _key = 'onboarding_completed';
 
+  /// Always force onboarding to show on every app launch
   static Future<bool> isCompleted() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_key) ?? false;
+    // Always return false to show onboarding every time
+    return false;
   }
 
   static Future<void> markCompleted() async {
